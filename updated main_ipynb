@@ -1,0 +1,579 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "main.ipynb의 사본",
+      "provenance": [],
+      "collapsed_sections": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/KyeongMin5307/2022_termproject_ds/blob/master/updated%20main_ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Data Science 2022 - Term Project\n",
+        "Objective: obtain a playlist from features of viewer"
+      ],
+      "metadata": {
+        "id": "jeubESbeqipG"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Libarary Utilities"
+      ],
+      "metadata": {
+        "id": "n5g5YOixtyad"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 9,
+      "metadata": {
+        "id": "RcjZLqJvqfsa"
+      },
+      "outputs": [],
+      "source": [
+        "# Libarary Imports\n",
+        "\n",
+        "# Basic Library\n",
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "\n",
+        "import random\n",
+        "from random import randrange\n",
+        "\n",
+        "# Colab: Google drive mounting\n",
+        "from google.colab import drive\n",
+        "from os.path import join"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "User Defined Classes"
+      ],
+      "metadata": {
+        "id": "djNvzvgTrU9I"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# This is a sample class. For writing classes, please follow this foramt.\n",
+        "# 샘플 클래스입니다.클래스 작성 시 이 포멧에 맞추어 작성해주세요.\n",
+        "# \n",
+        "# TODO: a sample class\n",
+        "class sampleClass:\n",
+        "  def __init__(self):\n",
+        "    # Variable @_var1: public int, description\n",
+        "    self.var1 = 0\n",
+        "\n",
+        "    # Variable @_var2: protected int, description\n",
+        "    self._var2 = 0\n",
+        "\n",
+        "    # Variable @__var3: private int, description\n",
+        "    self.__var3 = 0"
+      ],
+      "metadata": {
+        "id": "wg6tGpcXrUpd"
+      },
+      "execution_count": 2,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Functions"
+      ],
+      "metadata": {
+        "id": "N8xb3nTMqngI"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# This is a sample function. For writing source codes, please follow this foramt.\n",
+        "# 샘플 함수입니다. 함수 작성 시 이 포멧에 맞추어 작성해주세요.\n",
+        "# \n",
+        "# TODO: a sample function\n",
+        "# Param var: int, description\n",
+        "def sampleFunction(var: int):\n",
+        "    pass\n",
+        "\n",
+        "def Make_data(name: pd.DataFrame):\n",
+        "    df_list = []\n",
+        "    index = len(name.index) + 1\n",
+        "    i = randrange(1, index) # From 1 to the number of rows in the original dataset, determine the number of rows to create a NaN row\n",
+        "    for i in range(len(name)):\n",
+        "        if (i + 1) != len(name):\n",
+        "            df_new = name[i : i + 1]\n",
+        "            df_list.append(df_new)\n",
+        "            empty = pd.DataFrame(index=range(0, 1), columns=name.columns)\n",
+        "            df_list.append(empty)\n",
+        "        else: # Do not add a row with a NaN value after the last row\n",
+        "            df_temp = name[i : i + 1]\n",
+        "            df_list.append(df_temp)\n",
+        "    df_result = pd.concat(df_list).reset_index(drop=True)\n",
+        "    return df_result\n",
+        "\n",
+        "\n",
+        "# Todo: The function which check the NaN in dataset\n",
+        "# Param var: pandas DataFrame\n",
+        "def check_for_NaN(name : pd):\n",
+        "    df_check = name\n",
+        "\n",
+        "    df_1 = df_check.iloc[:, 0:2] \n",
+        "    df_2 = df_check.iloc[:, 3:5]\n",
+        "    df_check_1 = pd.concat([df_1, df_2],axis=1) # Dataset which have categorical value\n",
+        "\n",
+        "    df_3 = df_check.iloc[:, 2:3]\n",
+        "    df_4 = df_check.iloc[:, 5:]\n",
+        "    df_check_2 = pd.concat([df_3, df_4],axis=1) # Dataset which have numerical value\n",
+        "\n",
+        "    count_NaN = sum(df_check.isnull().sum()) # Calculate Number of data with NaN value\n",
+        "\n",
+        "    if (count_NaN != 0):\n",
+        "        df_check_1 = df_check_1.fillna(method='ffill') # When creating rows with NAN values, the dataset was created to follow the original data, so rows with categorical values remove the NAN values using the previous data\n",
+        "        for i in range(len(df_check_2.columns)):\n",
+        "            for j in range(len(df_check_2.index)):\n",
+        "                min = df_check_2.iloc[:, i:i + 1].min() # The smallest value in each column\n",
+        "                max = df_check_2.iloc[:, i:i + 1].max() # The biggest value in each column\n",
+        "                label = np.arange(min.item(), max.item()) # An array of numbers between small and large values\n",
+        "                if (j + 1) != len(df_check_2.index): # Before the last row\n",
+        "                    df_check_2.iloc[j:j + 1, i:i + 1] = df_check_2.iloc[j:j + 1, i:i + 1].fillna(random.choice(label)) #Randomly pick the values in the array\n",
+        "                else: # Last row\n",
+        "                    df_check_2.iloc[j - 1:j, i - 1:i] = df_check_2.iloc[j - 1:j, i - 1:i].fillna(random.choice(label)) #Randomly pick the values in the array\n",
+        "\n",
+        "\n",
+        "    df_check = pd.concat([df_check_1, df_check_2], axis=1) # Combining categorical and numerical data\n",
+        "    df_index = df_check[df_check['Genres'] == '[]'].index # Data which is not have information\n",
+        "    df_new = df_check.drop(df_index) \n",
+        "    return df_new\n",
+        "\n",
+        "# Todo: The function which divide Train dataset and Test dataset\n",
+        "# Param var: pandas DataFrame\n",
+        "def divide_dataset(name:pd.DataFrame, target:pd.DataFrame):\n",
+        "    number = randrange(1, 100, 5) #Randomly generate proportions except 0 and 100\n",
+        "    number = number / 100\n",
+        "    x_train, y_train, x_test, y_test = train_test_split(name,target,test_size=number,shuffle=True,stratify=target)\n",
+        "    return x_train, y_train, x_test, y_test"
+      ],
+      "metadata": {
+        "id": "eYD1yLqYqz3l"
+      },
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "ROOT = \"/content/drive\"\n",
+        "drive.mount(ROOT)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "GnNp72nGvRRH",
+        "outputId": "24322928-6c98-4f38-e8e2-348da97534a9"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Drive already mounted at /content/drive; to attempt to forcibly remount, call drive.mount(\"/content/drive\", force_remount=True).\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#Github connection: Clone repository to your drive.\n",
+        "path: (drive)/GitHub/2022_termproject_ds"
+      ],
+      "metadata": {
+        "id": "5SaGIRLEtSvh"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "# path to your project on Google Drive\n",
+        "DRIVE_PATH = \"/content/drive/MyDrive/GitHub\"\n",
+        "\n",
+        "# replace with your Github username \n",
+        "GIT_USERNAME = \"KyeongMin5307\"\n",
+        "\n",
+        "# access token\n",
+        "GIT_TOKEN = \"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\"\n",
+        "\n",
+        "# Replace with your github repository in this case we want \n",
+        "GIT_REPOSITORY = \"2022_termproject_ds\"\n",
+        "\n",
+        "PROJECT_PATH = join(ROOT, DRIVE_PATH)\n",
+        "\n",
+        "# It's good to print out the value if you are not sure\n",
+        "print(\"PROJECT_PATH: \", PROJECT_PATH)\n",
+        "\n",
+        "# In case we haven't created the folder already; we will create a folder in the project path \n",
+        "!mkdir $PROJECT_PATH\n",
+        "\n",
+        "GIT_PATH = \"https://\" + GIT_TOKEN + \"@github.com/\" + GIT_USERNAME + \"/\" + GIT_REPOSITORY + \".git\"\n",
+        "print(\"GIT_PATH: \", GIT_PATH)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "JB6cl127tSaT",
+        "outputId": "2972a6a7-f673-4904-9f0f-5982cdfda470"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "PROJECT_PATH:  /content/drive/MyDrive/GitHub\n",
+            "mkdir: cannot create directory ‘/content/drive/MyDrive/GitHub’: File exists\n",
+            "GIT_PATH:  https://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@github.com/KyeongMin5307/2022_termproject_ds.git\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Change directory to the location defined in project_path\n",
+        "%cd $PROJECT_PATH\n",
+        "\n",
+        "# clone the github repository\n",
+        "!git clone $GIT_PATH\n",
+        "\n",
+        "# Change directory to the location defined in project_path\n",
+        "%cd \"{PROJECT_PATH}/{GIT_REPOSITORY}\""
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "c_TKCIjm5o0X",
+        "outputId": "a3cea7d1-933e-41f7-af52-c2bf87a6bdf7"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "/content/drive/MyDrive/GitHub\n",
+            "fatal: destination path '2022_termproject_ds' already exists and is not an empty directory.\n",
+            "/content/drive/MyDrive/GitHub/2022_termproject_ds\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "If you already cloned, this code will pull latest git."
+      ],
+      "metadata": {
+        "id": "5utZu8vrQg3c"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!git init\n",
+        "!git remote add origin $GIT_PATH\n",
+        "!git pull $GIT_PATH"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "BUNIc833Sutx",
+        "outputId": "28e6d370-f1e7-4c9e-b1a5-55a8d0cb5db9"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Reinitialized existing Git repository in /content/drive/MyDrive/GitHub/2022_termproject_ds/.git/\n",
+            "fatal: remote origin already exists.\n",
+            "From https://github.com/KyeongMin5307/2022_termproject_ds\n",
+            " * branch            HEAD       -> FETCH_HEAD\n",
+            "Already up to date.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Data Curation"
+      ],
+      "metadata": {
+        "id": "pYGtBk4ZtQ8g"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df = pd.read_csv('dataset/young_people_survey/alternative_music_data.csv')\n",
+        "df_1 = df.iloc[:, :16]\n",
+        "df_2 = df.iloc[:, 20:22]\n",
+        "df_3 = pd.concat([df_1, df_2], axis=1) # The data which excepts 'id','url','track_href', 'analysis_url column that not used\n",
+        "df_3 = Make_data(df_3)\n",
+        "\n",
+        "df_new = check_for_NaN(df_3)\n",
+        "print(df_new)\n",
+        "df_target = df_new['Playlist']\n",
+        "x_train, y_train, x_test, y_test = divide_dataset(df_new, df_target)"
+      ],
+      "metadata": {
+        "id": "TAIYTUd0tSBH",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "f55ee2f4-4634-42d3-a270-db2572b5bbb9"
+      },
+      "execution_count": 10,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "          Artist Name                 Track Name  \\\n",
+            "0               James                       Laid   \n",
+            "1               James                       Laid   \n",
+            "2            grandson            In Over My Head   \n",
+            "3            grandson            In Over My Head   \n",
+            "4               Foals                On The Luna   \n",
+            "...               ...                        ...   \n",
+            "4314  Lianne La Havas  Seven Times - Wu-Lu Remix   \n",
+            "4315  Lianne La Havas  Seven Times - Wu-Lu Remix   \n",
+            "4316         Sløtface                   Luminous   \n",
+            "4317         Sløtface                   Luminous   \n",
+            "4318   *repeat repeat            Wind in My Sail   \n",
+            "\n",
+            "                                                 Genres           Playlist  \\\n",
+            "0     ['britpop', 'madchester', 'new wave', 'new wav...    Alternative 90s   \n",
+            "1     ['britpop', 'madchester', 'new wave', 'new wav...    Alternative 90s   \n",
+            "2     ['modern alternative rock', 'modern rock', 'ro...  Alternative Beats   \n",
+            "3     ['modern alternative rock', 'modern rock', 'ro...  Alternative Beats   \n",
+            "4     ['alternative dance', 'indie rock', 'modern al...    Alternative 10s   \n",
+            "...                                                 ...                ...   \n",
+            "4314  ['british soul', 'indie soul', 'neo soul', 'po...             Butter   \n",
+            "4315  ['british soul', 'indie soul', 'neo soul', 'po...             Butter   \n",
+            "4316                ['bubblegrunge', 'norwegian indie']      undercurrents   \n",
+            "4317                ['bubblegrunge', 'norwegian indie']      undercurrents   \n",
+            "4318                                ['nashville indie']               pulp   \n",
+            "\n",
+            "     Popularity  danceability   energy key  loudness mode  speechiness  \\\n",
+            "0            66        0.4570  0.90900   0    -9.451    1       0.0317   \n",
+            "1            55        0.0635  0.00301   4     1.162    0       0.0227   \n",
+            "2            60        0.5820  0.81700   0    -6.475    1       0.0399   \n",
+            "3            14        0.0635  0.00301   4   -21.838    0       0.0227   \n",
+            "4            51        0.5250  0.97600   0    -2.023    1       0.0479   \n",
+            "...         ...           ...      ...  ..       ...  ...          ...   \n",
+            "4314         53        0.6790  0.11100   6   -28.013    1       0.0653   \n",
+            "4315         34        0.0635  0.00301  10    -8.838    0       0.0227   \n",
+            "4316         27        0.4260  0.53800  10    -8.154    1       0.0367   \n",
+            "4317         36        0.0635  0.00301   2   -19.838    0       0.0227   \n",
+            "4318         23        0.4950  0.84400   7    -4.448    1       0.0433   \n",
+            "\n",
+            "      acousticness  instrumentalness  liveness  valence    tempo duration_ms  \\\n",
+            "0         0.001600          0.000276    0.1350   0.7550  115.998      156667   \n",
+            "1         0.000001          0.000000    0.0136   0.0271  106.500      364223   \n",
+            "2         0.001700          0.015800    0.5750   0.6220  155.124      198366   \n",
+            "3         0.000001          0.000000    0.0136   0.0271   85.500      152756   \n",
+            "4         0.066200          0.000392    0.0804   0.8550  138.984      192695   \n",
+            "...            ...               ...       ...      ...      ...         ...   \n",
+            "4314      0.623000          0.274000    0.3530   0.5080   90.014      196000   \n",
+            "4315      0.000001          0.000000    0.0136   0.0271  211.500      112353   \n",
+            "4316      0.007510          0.003100    0.0729   0.5070  171.693      228507   \n",
+            "4317      0.000001          0.000000    0.0136   0.0271  197.500      284843   \n",
+            "4318      0.000097          0.810000    0.4470   0.4600  119.958      185916   \n",
+            "\n",
+            "     time_signature  \n",
+            "0                 4  \n",
+            "1                 1  \n",
+            "2                 4  \n",
+            "3                 2  \n",
+            "4                 4  \n",
+            "...             ...  \n",
+            "4314              4  \n",
+            "4315              3  \n",
+            "4316              4  \n",
+            "4317              4  \n",
+            "4318              4  \n",
+            "\n",
+            "[3803 rows x 18 columns]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Data Inspection"
+      ],
+      "metadata": {
+        "id": "RBuetNjwtnaB"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "metadata": {
+        "id": "lDbLAjnYt82J"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Data Preprocessing"
+      ],
+      "metadata": {
+        "id": "s7yHiY2Zt9Hr"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "metadata": {
+        "id": "VBg7yw-St-Pl"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Data Analysis"
+      ],
+      "metadata": {
+        "id": "2g9ERxQVt-r_"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "metadata": {
+        "id": "0P1IuujjuD49"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Evaluation"
+      ],
+      "metadata": {
+        "id": "CkCSGzz2uEEn"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "metadata": {
+        "id": "SmLSx1mpuF0U"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Deployment"
+      ],
+      "metadata": {
+        "id": "qocZ6B26uGKe"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "metadata": {
+        "id": "ykwb4FjauHZs"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Github: Commit & Push\n",
+        "Use this when you need to update dataset, resource, output into git.\n",
+        "Please disable them after using it."
+      ],
+      "metadata": {
+        "id": "zp2l7PWJIcdG"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# user_email = input('Enter your e-mail:')\n",
+        "# user_name = input('Enter your name:')\n",
+        "\n",
+        "# !git config --global user.email \"{user_email}\"\n",
+        "# !git config --global user.name \"{user_name}\"\n",
+        "\n",
+        "# commit_msg = input('Enter commit msg:')\n",
+        "\n",
+        "# !git add . \n",
+        "# !git commit -m \"{commit_msg}\"\n",
+        "# !git push $GIT_PATH"
+      ],
+      "metadata": {
+        "id": "N_TmefbVIi-a"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
